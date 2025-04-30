@@ -1,0 +1,26 @@
+# Node dependencies
+node_modules/
+.DS_Store
+
+# Foundry artifacts
+cache/
+out/
+broadcast/*/31337/
+
+# Environment variables
+.env
+
+# PDF files
+*.pdf
+
+# Build files
+dist/
+build/
+
+# Coverage
+coverage/
+coverage.json
+
+# Local development
+.vscode/
+.idea/
