@@ -1,14 +1,25 @@
 # Node dependencies
 node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
 .DS_Store
 
 # Foundry artifacts
 cache/
 out/
+
+# Broadcast - we generally want to keep testnet/mainnet deployments
+# but exclude local network deployments
 broadcast/*/31337/
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/secrets.json
 
 # PDF files
 *.pdf
@@ -20,7 +31,25 @@ build/
 # Coverage
 coverage/
 coverage.json
+lcov.info
 
 # Local development
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
+
+# Logs
+logs
+*.log
+
+# Hardhat files
+.openzeppelin/
+artifacts/
+typechain/
+typechain-types/
+
+# Forge lib - keep the references but not the full content
+**/lib/**/test/
+**/lib/**/example/
+**/lib/**/examples/

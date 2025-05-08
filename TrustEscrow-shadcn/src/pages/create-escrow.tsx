@@ -39,7 +39,7 @@ export function CreateEscrow() {
         description: "Your escrow contract has been successfully created.",
       })
       // Navigate to dashboard after successful creation
-      navigate('/dashboard')
+      navigate('/')
     }
   }, [isConfirmed, hash, navigate, toast])
   
@@ -240,11 +240,32 @@ export function CreateEscrow() {
         BigInt(0)
       )
       
+      // When the factory creates an escrow, it takes a 0.5% fee
+      // The amount that actually reaches the escrow is total * (1 - 0.005)
+      // To make this work, we need to send more than the milestone sum
+      const feeRate = 0.005; // 0.5%
+      const valueToSend = totalValueWei * BigInt(10000) / BigInt(10000 - 50); // 50 basis points = 0.5%
+      
       console.log('Milestone amounts:', {
         milestones,
         milestonesInWei: milestonesInWei.map(m => m.toString()),
-        totalValueWei: totalValueWei.toString()
+        totalValueWei: totalValueWei.toString(),
+        valueToSend: valueToSend.toString()
       })
+      
+      // Validate that all milestone amounts sum up to the total amount
+      const totalEthValue = parseFloat(totalAmount);
+      const sumOfMilestones = milestones.reduce((sum, m) => sum + parseFloat(m), 0);
+      
+      // Check for any difference greater than a tiny rounding error
+      if (Math.abs(totalEthValue - sumOfMilestones) > 0.000001) {
+        toast({
+          title: "Milestone amount mismatch",
+          description: `Total milestone amount (${sumOfMilestones} ETH) must exactly equal the total escrow amount (${totalEthValue} ETH).`,
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Debug logging transaction details
       console.log('Transaction details:', {
@@ -254,7 +275,8 @@ export function CreateEscrow() {
         confirmations: numConfirmations,
         timelock: timelockValue,
         milestonesInWei: milestonesInWei.map(m => m.toString()),
-        totalValue: totalValueWei.toString()
+        totalValue: totalValueWei.toString(),
+        valueToSend: valueToSend.toString()
       })
       
       // Extra debug logging right before transaction
@@ -265,9 +287,9 @@ export function CreateEscrow() {
           validParticipants,
           numConfirmations,
           timelockValue,
-          milestonesInWei.map(m => m.toString())
+          milestonesInWei
         ],
-        value: totalValueWei.toString(),
+        value: valueToSend.toString(),
         isConnected,
         walletAddress: address
       });
@@ -285,7 +307,7 @@ export function CreateEscrow() {
             BigInt(timelockValue),
             milestonesInWei
           ],
-          value: totalValueWei
+          value: valueToSend
         });
         console.log('writeContract completed with result:', result);
       } catch (txError) {
@@ -304,6 +326,16 @@ export function CreateEscrow() {
       // Check for specific error types
       const errorMessage = error?.message || "Failed to create escrow. Check the console for details."
       const userRejected = errorMessage.includes('user rejected') || errorMessage.includes('User denied')
+      
+      // Special handling for milestone amount error
+      if (errorMessage.includes('Milestone amounts must equal total escrow amount')) {
+        toast({
+          title: "Milestone Amount Error",
+          description: "There's an issue with milestone amounts. Please try using a round number for your milestone like 20 ETH instead of 20.001 ETH to avoid precision issues.",
+          variant: "destructive"
+        });
+        return;
+      }
       
       toast({
         title: userRejected ? "Transaction Cancelled" : "Transaction Error",
@@ -427,8 +459,8 @@ export function CreateEscrow() {
                     type="number"
                     value={milestone}
                     onChange={(e) => handleMilestoneChange(index, e.target.value)}
-                    step="0.01"
-                    min="0.01"
+                    step="0.001"
+                    min="0.001"
                   />
                   <span className="font-medium">ETH</span>
                   {milestones.length > 1 && (
@@ -452,9 +484,29 @@ export function CreateEscrow() {
               Add Milestone
             </Button>
             
-            <div className="flex justify-between p-4 bg-muted rounded-lg">
-              <span className="font-semibold">Total Amount:</span>
-              <span className="font-bold">{totalAmount} ETH</span>
+            <div className="flex flex-col p-4 bg-muted rounded-lg">
+              <div className="flex justify-between">
+                <span className="font-semibold">Total Amount:</span>
+                <span className="font-bold">{totalAmount} ETH</span>
+              </div>
+              
+              {/* Calculate and display the platform fee */}
+              <div className="flex justify-between mt-1 text-sm">
+                <span className="text-muted-foreground">Platform Fee (0.5%):</span>
+                <span>{(parseFloat(totalAmount) * 0.005).toFixed(4)} ETH</span>
+              </div>
+              
+              {/* Calculate and display the total with fee */}
+              <div className="flex justify-between mt-1 text-sm font-medium">
+                <span>Total with Fee:</span>
+                <span>{(parseFloat(totalAmount) * 1.005).toFixed(4)} ETH</span>
+              </div>
+              
+              {/* Add validation tip */}
+              <p className="text-xs text-muted-foreground mt-2">
+                Note: To avoid precision issues, try to use simple round numbers for milestone amounts (e.g., 20 ETH instead of 20.001 ETH).
+                The platform fee of 0.5% will be added to the total when you send the transaction.
+              </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 w-full">

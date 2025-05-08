@@ -22,7 +22,7 @@ export function Layout() {
           <div className="flex items-center gap-6 md:gap-10">
             <Link to="/" className="flex items-center space-x-2">
               <Target className="h-6 w-6" />
-              <span className="hidden font-bold sm:inline-block">Bountiful</span>
+              <span className="hidden font-bold sm:inline-block">TrustEscrow</span>
             </Link>
             <nav className="hidden gap-6 md:flex">
               <Link to="/" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
@@ -31,7 +31,7 @@ export function Layout() {
               </Link>
               <Link to="/create" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                 <Plus className="h-4 w-4" />
-                Create Bounty
+                Create Escrow
               </Link>
               <Link to="/arbitration" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                 <Inbox className="h-4 w-4" />
